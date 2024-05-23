@@ -7,15 +7,20 @@ if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE Debug)
 endif()
 
-# Architecture string.
-set(ARCH "${CMAKE_SYSTEM_PROCESSOR}" CACHE STRING "Override CPU architecture")
-string(REGEX REPLACE "amd64" "x86_64" KERNEL_ARCH "${ARCH}")
+set(CMAKE_CXX_STANDARD 17)
 
-if("${KERNEL_ARCH}" STREQUAL "x86_64")
-  set(ARCH "x64")
-else()
-  message(FATAL_ERROR "Unsupported ARCH: ${KERNEL_ARCH}")
-endif()
+# Architecture string.
+# set(ARCH "${CMAKE_SYSTEM_PROCESSOR}" CACHE STRING "Override CPU architecture")
+# string(REGEX REPLACE "amd64" "x86_64" KERNEL_ARCH "${ARCH}")
+
+# message(STATUS "ARCH: ${ARCH}")
+# message(STATUS "KERNEL_ARCH: ${KERNEL_ARCH}")
+
+# if("${KERNEL_ARCH}" STREQUAL "x86_64")
+#   set(ARCH "x64")
+# else()
+#   message(FATAL_ERROR "Unsupported ARCH: ${KERNEL_ARCH}")
+# endif()
 
 # Set directory locations (allowing us to move directories easily)
 set(BUILD_DIR ${CMAKE_BINARY_DIR}/${CMAKE_BUILD_TYPE}${ARCH})
@@ -25,20 +30,30 @@ set(BUILD_DIR ${CMAKE_BINARY_DIR}/${CMAKE_BUILD_TYPE}${ARCH})
 # ==============================================================================
 
 # Google Dawn
-set(DAWN_ENABLE_PIC        ON CACHE BOOL "Position-Independent-Code")
-set(DAWN_ENABLE_DESKTOP_GL OFF CACHE BOOL "OpenGL backend")
-set(DAWN_ENABLE_OPENGLES   OFF CACHE BOOL "OpenGL ES backend")
-set(DAWN_BUILD_EXAMPLES    OFF CACHE BOOL "Dawn examples")
-set(TINT_BUILD_SAMPLES     OFF CACHE BOOL "Tint examples")
-set(TINT_BUILD_GLSL_WRITER OFF CACHE BOOL "OpenGL SL writer")
+set(DAWN_ENABLE_PIC        ON ) # CACHE BOOL "Position-Independent-Code")
+set(DAWN_ENABLE_DESKTOP_GL OFF ) # CACHE BOOL "OpenGL backend")
+set(DAWN_ENABLE_OPENGLES   OFF) #  CACHE BOOL "OpenGL ES backend")
+set(DAWN_BUILD_EXAMPLES    OFF) #  CACHE BOOL "Dawn examples")
+set(TINT_BUILD_SAMPLES     OFF) #  CACHE BOOL "Tint examples")
+set(TINT_BUILD_GLSL_WRITER OFF) #  CACHE BOOL "OpenGL SL writer")
 
 if (WIN32)
   set(TINT_BUILD_MSL_WRITER  OFF CACHE BOOL "Metal SL writer")
   set(TINT_BUILD_SPV_WRITER  OFF CACHE BOOL "SPIR-V writer")
+elseif (APPLE)
+  message(STATUS "Apple...")
+  set(TINT_BUILD_GLSL_WRITER OFF) #  CACHE BOOL "OpenGL SL writer")
+  set(TINT_BUILD_MSL_WRITER  ON) # CACHE BOOL "Metal SL writer")
+  set(TINT_BUILD_HLSL_WRITER OFF CACHE BOOL "DirectX SL writer")
+  set(DAWN_ENABLE_METAL      ON) # CACHE BOOL "Enable compilation of the Metal backend")
+  set(DAWN_TARGET_MACOS      ON) # CACHE BOOL "Manually link Apple core frameworks")
 elseif(UNIX)
+  message(STATUS "UNIX...")
   set(TINT_BUILD_MSL_WRITER  OFF CACHE BOOL "Metal SL writer")
   set(TINT_BUILD_HLSL_WRITER OFF CACHE BOOL "DirectX SL writer")
 endif()
+
+message(STATUS "Tint build MSL writer: ${TINT_BUILD_MSL_WRITER}")
 
 add_subdirectory(external/dawn/dawn dawn EXCLUDE_FROM_ALL)
 set(DAWN_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/dawn)
@@ -77,6 +92,7 @@ target_link_libraries(${TARGET}
     dawn_native
     dawn_utils
     dawn_internal_config  # for definitions DAWN_ENABLE_BACKEND_*
+    # libtint
 )
 
 # pthread
@@ -194,91 +210,93 @@ set(SOURCES
 # examples
 set(SOURCES
     ${SOURCES}
-    src/examples/a_buffer.c
-    src/examples/animometer.c
-    # src/examples/aquarium.c
-    src/examples/basisu.c
-    src/examples/bind_groups.c
-    src/examples/blinn_phong_lighting.c
-    src/examples/bloom.c
+    # src/examples/a_buffer.c
+    # src/examples/animometer.c
+    # # src/examples/aquarium.c
+    # src/examples/basisu.c
+    # src/examples/bind_groups.c
+    # src/examples/blinn_phong_lighting.c
+    # src/examples/bloom.c
     src/examples/cameras.c
     src/examples/clear_screen.c
-    src/examples/compute_boids.c
-    src/examples/compute_metaballs.c
-    src/examples/compute_particles_easing.c
-    src/examples/compute_particles_webgpu_logo.c
-    src/examples/compute_particles.c
-    src/examples/compute_ray_tracing.c
-    src/examples/compute_shader.c
-    src/examples/conservative_raster.c
-    src/examples/conway.c
-    src/examples/conway_paletted_blurring.c
-    src/examples/coordinate_system.c
-    src/examples/cornell_box.c
-    src/examples/cube_reflection.c
-    src/examples/cubemap.c
-    src/examples/deferred_rendering.c
-    src/examples/dynamic_uniform_buffer.c
-    src/examples/equirectangular_image.c
-    src/examples/fluid_simulation.c
-    src/examples/game_of_life.c
-    src/examples/gears.c
-    src/examples/gerstner_waves.c
-    src/examples/gltf_loading.c
-    src/examples/gltf_scene_rendering.c
-    src/examples/gltf_skinning.c
-    src/examples/hdr.c
-    src/examples/image_blur.c
-    src/examples/imgui_overlay.c
-    src/examples/immersive_video.c
-    src/examples/instanced_cube.c
-    src/examples/minimal.c
-    src/examples/msaa_line.c
-    src/examples/multi_sampling.c
-    src/examples/n_body_simulation.c
-    src/examples/normal_map.c
-    src/examples/normal_mapping.c
-    src/examples/occlusion_query.c
-    src/examples/parallax_mapping.c
-    src/examples/offscreen_rendering.c
-    src/examples/out_of_bounds_viewport.c
-    src/examples/pbr_basic.c
-    src/examples/pbr_ibl.c
-    src/examples/pbr_texture.c
-    src/examples/points.c
-    src/examples/post_processing.c
-    src/examples/pristine_grid.c
-    src/examples/prng.c
-    src/examples/procedural_mesh.c
-    src/examples/radial_blur.c
-    src/examples/render_bundles.c
-    src/examples/reversed_z.c
-    src/examples/sampler_parameters.c
-    src/examples/screenshot.c
-    src/examples/shadertoy.c
-    src/examples/shadow_mapping.c
-    src/examples/square.c
-    src/examples/stencil_buffer.c
-    src/examples/terrain_mesh.c
-    src/examples/text_overlay.c
-    src/examples/texture_3d.c
-    src/examples/texture_cubemap.c
-    src/examples/texture_mipmap_gen.c
-    src/examples/textured_cube.c
-    src/examples/textured_quad.c
-    src/examples/tile_map.c
-    src/examples/triangle.c
-    src/examples/two_cubes.c
-    src/examples/vertex_buffer.c
-    src/examples/video_uploading.c
-    src/examples/volume_rendering_texture_3d.c
-    src/examples/wireframe_vertex_pulling.c
+    # src/examples/compute_boids.c
+    # src/examples/compute_metaballs.c
+    # src/examples/compute_particles_easing.c
+    # src/examples/compute_particles_webgpu_logo.c
+    # src/examples/compute_particles.c
+    # src/examples/compute_ray_tracing.c
+    # src/examples/compute_shader.c
+    # src/examples/conservative_raster.c
+    # src/examples/conway.c
+    # src/examples/conway_paletted_blurring.c
+    # src/examples/coordinate_system.c
+    # src/examples/cornell_box.c
+    # src/examples/cube_reflection.c
+    # src/examples/cubemap.c
+    # src/examples/deferred_rendering.c
+    # src/examples/dynamic_uniform_buffer.c
+    # src/examples/equirectangular_image.c
+    # src/examples/fluid_simulation.c
+    # src/examples/game_of_life.c
+    # src/examples/gears.c
+    # src/examples/gerstner_waves.c
+    # src/examples/gltf_loading.c
+    # src/examples/gltf_scene_rendering.c
+    # src/examples/gltf_skinning.c
+    # src/examples/hdr.c
+    # src/examples/image_blur.c
+    # src/examples/imgui_overlay.c
+    # src/examples/immersive_video.c
+    # src/examples/instanced_cube.c
+    # src/examples/minimal.c
+    # src/examples/msaa_line.c
+    # src/examples/multi_sampling.c
+    # src/examples/n_body_simulation.c
+    # src/examples/normal_map.c
+    # src/examples/normal_mapping.c
+    # src/examples/occlusion_query.c
+    # src/examples/parallax_mapping.c
+    # src/examples/offscreen_rendering.c
+    # src/examples/out_of_bounds_viewport.c
+    # src/examples/pbr_basic.c
+    # src/examples/pbr_ibl.c
+    # src/examples/pbr_texture.c
+    # src/examples/points.c
+    # src/examples/post_processing.c
+    # src/examples/pristine_grid.c
+    # src/examples/prng.c
+    # src/examples/procedural_mesh.c
+    # src/examples/radial_blur.c
+    # src/examples/render_bundles.c
+    # src/examples/reversed_z.c
+    # src/examples/sampler_parameters.c
+    # src/examples/screenshot.c
+    # src/examples/shadertoy.c
+    # src/examples/shadow_mapping.c
+    # src/examples/square.c
+    # src/examples/stencil_buffer.c
+    # src/examples/terrain_mesh.c
+    # src/examples/text_overlay.c
+    # src/examples/texture_3d.c
+    # src/examples/texture_cubemap.c
+    # src/examples/texture_mipmap_gen.c
+    # src/examples/textured_cube.c
+    # src/examples/textured_quad.c
+    # src/examples/tile_map.c
+    # src/examples/triangle.c
+    # src/examples/two_cubes.c
+    # src/examples/vertex_buffer.c
+    # src/examples/video_uploading.c
+    # src/examples/volume_rendering_texture_3d.c
+    # src/examples/wireframe_vertex_pulling.c
 )
 
 if(WIN32)
   set(SOURCES ${SOURCES} src/platforms/win32.c)
 elseif(APPLE)
-  set(SOURCES ${SOURCES} src/platforms/macos.m)
+#   set(SOURCES ${SOURCES} src/platforms/macos.m)
+# D4: TODO...
+    set(SOURCES ${SOURCES} src/platforms/linux.c)
 else()
     set(SOURCES ${SOURCES} src/platforms/linux.c)
 endif()
@@ -341,7 +359,7 @@ endif()
 
 if(WIN32)
     # nothing to do for now
-elseif(APPLE)
+# elseif(APPLE)
     # nothing to do for now
 else()
     target_include_directories(${TARGET}
@@ -353,6 +371,7 @@ else()
         PRIVATE external/cJSON
         PRIVATE external/dawn/include
         PRIVATE external/ktx/include
+        PRIVATE external/ktx/other_include
         PRIVATE external/par
         PRIVATE external/rply
         PRIVATE external/sc

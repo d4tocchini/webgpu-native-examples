@@ -1,16 +1,20 @@
 #include "window.h"
 
-#if defined(__linux__)
-#define GLFW_INCLUDE_NONE
-#define GLFW_INCLUDE_VULKAN
+#if defined(__ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__)
+#define __MACOS__ 1
 #endif
-#include <GLFW/glfw3.h>
 
 #if defined(WIN32)
 #define GLFW_EXPOSE_NATIVE_WIN32
 #elif defined(__linux__)
+#define GLFW_INCLUDE_NONE
+#define GLFW_INCLUDE_VULKAN
 #define GLFW_EXPOSE_NATIVE_X11
+#elif defined(__MACOS__)
+#define GLFW_INCLUDE_NONE
+#define GLFW_EXPOSE_NATIVE_COCOA
 #endif
+#include <GLFW/glfw3.h>
 #include "GLFW/glfw3native.h"
 
 #include <stdio.h>
@@ -156,6 +160,9 @@ void* window_get_surface(window_t* window)
 #elif defined(__linux__) /* X11 */
   void* display         = glfwGetX11Display();
   uint32_t windowHandle = glfwGetX11Window(window->handle);
+#elif defined(__MACOS__)
+  void* display         = NULL;
+  uint32_t windowHandle = (uint32_t)glfwGetCocoaWindow(window->handle);
 #endif
   window->surface.handle = wgpu_create_surface(display, &windowHandle);
 

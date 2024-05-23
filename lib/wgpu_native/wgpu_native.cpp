@@ -58,9 +58,11 @@ static void Initialize()
   gpuContext.dawn_native.instance = std::make_unique<dawn::native::Instance>();
   // Discovers adapters
   (void)gpuContext.dawn_native.instance->EnumerateAdapters();
-  gpuContext.dawn_native.instance->EnableBackendValidation(true);
-  gpuContext.dawn_native.instance->SetBackendValidationLevel(
-    dawn::native::BackendValidationLevel::Full);
+
+  // D4: Why?
+  // gpuContext.dawn_native.instance->EnableBackendValidation(true);
+  // gpuContext.dawn_native.instance->SetBackendValidationLevel(
+  //   dawn::native::BackendValidationLevel::Full);
 
   // Dawn backend type.
   // Default to D3D12, Metal, Vulkan, OpenGL in that order as D3D12 and Metal
